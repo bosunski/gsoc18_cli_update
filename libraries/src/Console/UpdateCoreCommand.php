@@ -13,6 +13,7 @@ defined('JPATH_PLATFORM') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Installer\InstallerHelper;
 use Joomla\Console\AbstractCommand;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 
@@ -61,14 +62,22 @@ class UpdateCoreCommand extends AbstractCommand
 	public function execute(): int
 	{
 		$this->configureIO();
-		$result = $this->updateJoomlaCore();
-		if ($result)
+
+		$action = $this->cliInput->getArgument('action');
+		if ($action == 'update')
 		{
-			$this->ioStyle->success('Joomla Core Updated Successfuly');
+			if ($this->updateJoomlaCore())
+			{
+				$this->ioStyle->success('Joomla Core Updated Successfuly.');
+			}
+			else
+			{
+				$this->ioStyle->note('No Joomla update is available');
+			}
 		}
 		else
 		{
-			$this->ioStyle->note('No Joomla update is available');
+			$this->ioStyle->error("Action not recognized");
 		}
 		return 0;
 	}
@@ -86,9 +95,9 @@ class UpdateCoreCommand extends AbstractCommand
 		$this->setDescription('Updates Joomla Core');
 
 		$this->addArgument(
-			'from',
+			'action',
 			InputArgument::REQUIRED,
-			'From where do you want to install? (path OR url)'
+			'The action you want to perform on the core. e.g update'
 		);
 
 		$help = "The <info>%command.name%</info> Updates the Joomla Core \n <info>php %command.full_name%</info>";
@@ -99,6 +108,8 @@ class UpdateCoreCommand extends AbstractCommand
 	 * Update Core Joomla
 	 *
 	 * @return  bool  success
+	 *
+	 * @since 4.0
 	 */
 	private function updateJoomlaCore()
 	{
